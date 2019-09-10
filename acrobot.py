@@ -4,22 +4,22 @@ import numpy as np
 import random
 import math
 
-env = gym.make('CartPole-v0')
+env = gym.make('Acrobot-v1')
 # observation = env.reset()
 
 
 # NN placehoders
-input_X = tf.placeholder(shape=(None, 4), dtype=tf.float32)
-actual_Y = tf.placeholder(shape=(None, 2), dtype=tf.float32)
+input_X = tf.placeholder(shape=(None, 6), dtype=tf.float32)
+actual_Y = tf.placeholder(shape=(None, 3), dtype=tf.float32)
 
 # NN Variables
 weight1 = tf.Variable(tf.truncated_normal(
-    shape=(4, 20), stddev=0.05, dtype=tf.float32))
+    shape=(6, 20), stddev=0.05, dtype=tf.float32))
 bias1 = tf.Variable(tf.zeros(shape=(20), dtype=tf.float32))
 
 weight2 = tf.Variable(tf.truncated_normal(
-    shape=(20, 2), stddev=0.05, dtype=tf.float32))
-bias2 = tf.Variable(tf.zeros(shape=(2), dtype=tf.float32))
+    shape=(20, 3), stddev=0.05, dtype=tf.float32))
+bias2 = tf.Variable(tf.zeros(shape=(3), dtype=tf.float32))
 
 # outputs
 hidden_1 = tf.nn.relu(tf.add(tf.matmul(input_X, weight1), bias1))
@@ -33,8 +33,8 @@ batch_size = 20
 learning_rate = 0.05
 gamma = 0.9
 decay = 0.9
-num_states = 4
-num_action = 2
+num_states = 6
+num_action = 3
 max_decay = 0.95
 min_decay = 0.2
 # max_rewards = -999
@@ -105,13 +105,16 @@ with tf.Session() as sess:
         while True:
             env.render()
             action = np.argmax(sess.run(output, feed_dict={input_X: np.array(
-                prev_state).reshape(1, 4)}))  # your agent here (this takes random actions)
+                prev_state).reshape(1, num_states)}))  # your agent here (this takes random actions)
             print(action)
             next_state, reward, done, info = env.step(action)
-            if(reward == 0):
-                reward += 10
+
+            print(next_state[0])
+            if (math.acos(next_state[0])) - (math.acos(next_state[2])) > 90:
+                reward += 200
             else:
-                reward += 100
+                reward -= 100
+
             add_to_memory([prev_state, next_state, action, reward])
             prev_state = next_state
             replay(sess, epsilon)
